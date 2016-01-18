@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+						http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+						http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
+						http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd">
+	<!--開啟註釋處理器  -->
+	<context:annotation-config/>
+	
+	<!--  <context:component-scan base-package="com.netbank"/>-->
+	
+	<!-- 宣告交易管理器 -->
+	<bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>  
+	
+	<!-- 定義交易知會 -->
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="get*" read-only="true" propagation="NOT_SUPPORTED"/>
+			<tx:method name="*" propagation="REQUIRED"/>
+		</tx:attributes>
+	</tx:advice>
+	
+	<!--定義切面，並將交易知會和切面群組合（定義哪些方法套用交易規則） -->
+	<aop:config>
+		<aop:pointcut id="transactionPointcut" expression="execution(* com.netbank.biz.impl.*.*(..))" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="transactionPointcut"/>
+	</aop:config>
+	
+	<!--基於Annotation模式的交易管理組態-->
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+
+
+	<bean id="dataSource"
+		class="org.apache.commons.dbcp.BasicDataSource">
+		<property name="driverClassName"
+			value="com.microsoft.sqlserver.jdbc.SQLServerDriver">
+		</property>
+		<property name="url"
+			value="jdbc:sqlserver://localhost:1433;databaseName=bank">
+		</property>
+		<property name="username" value="sa"></property>
+		<property name="password" value="123456"></property>
+	</bean>
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+		<property name="dataSource">
+			<ref bean="dataSource" />
+		</property>
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">
+					org.hibernate.dialect.SQLServerDialect
+				</prop>
+			</props>
+		</property>
+		<property name="mappingResources">
+			<list>
+				<value>
+					com/netbank/entity/TransactionType.hbm.xml
+				</value>
+				<value>com/netbank/entity/Account.hbm.xml</value>
+				<value>com/netbank/entity/TransactionLog.hbm.xml</value>
+				<value>com/netbank/entity/Personinfo.hbm.xml</value>
+				<value>com/netbank/entity/Status.hbm.xml</value>
+				<value>com/netbank/entity/Admin.hbm.xml</value></list>
+		</property>	
+	</bean>
+	
+	<!-- 定義UserDaoImpl，並給UserDaoImpl的父類別 HibernateDaoSupport中的sessionFactory屬性植入值 -->
+	<bean id="userDao" class="com.netbank.dao.impl.UserDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	
+	<!-- 定義UserBizImpl，並給其屬性userDao植入案例 -->
+	<bean id="userBiz" class="com.netbank.biz.impl.UserBizImpl">
+	   <property name="userDao" ref="userDao"></property>
+	</bean>
+	
+	<!-- 定義PersoninfoDaoImpl，並給PersoninfoDaoImpl的父類別 HibernateDaoSupport中的sessionFactory屬性植入值 -->
+	<bean id="personinfoDao" class="com.netbank.dao.impl.PersoninfoDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	
+	<!-- 定義PersoninfoBizImpl，並給其屬性personinfoDao和userDao植入Bean案例 -->
+	<bean id="personinfoBiz" class="com.netbank.biz.impl.PersoninfoBizImpl">
+		<property name="personinfoDao" ref="personinfoDao"></property>
+		<property name="userDao" ref="userDao"></property>
+	</bean>
+	
+	<!-- 定義TransactionDaoImpl，並給其父類別 HibernateDaoSupport中的sessionFactory屬性植入值 -->
+	<bean id="transactionDao" class="com.netbank.dao.impl.TransactionDaoImpl">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>	
+	
+	<!-- 定義TransactionBizImpl，並給其屬性transactionDao和userDao植入Bean案例 -->
+	<bean id="transactionBiz" class="com.netbank.biz.impl.TransactionBizImpl">
+		<property name="transactionDao" ref="transactionDao"></property>
+		<property name="userDao" ref="userDao"></property>
+	</bean>	
+	
+	<!-- 使用原型模式定義UserAction類別，UserAction類別的屬性透過Annotation註釋模式植入 -->
+	<bean name="user" class="com.netbank.action.UserAction" scope="prototype"/>
+	
+	<bean name="file" class="com.netbank.action.FileAction" scope="prototype"/>
+	
+	<!-- 使用原型模式定義PersoninfoAction類別，PersoninfoAction類別的屬性透過Annotation註釋模式植入 -->
+	<bean name="personinfo" class="com.netbank.action.PersoninfoAction" scope="prototype"/>
+	
+	<!-- 使用原型模式定義AdminAction類別，AdminAction類別的屬性userBiz和personinfoBiz透過Annotation註釋模式植入 -->
+	<bean name="admin" class="com.netbank.action.AdminAction" scope="prototype" />
+	
+	
+	<!-- 使用原型模式定義Transaction類別,並給屬性 userBiz和transactionBiz植入值-->
+    <bean name="transaction" class="com.netbank.action.Transaction" scope="prototype">
+	    <property name="userBiz" ref="userBiz"></property>
+	    <property name="transactionBiz" ref="transactionBiz"></property>
+	</bean>
+	
+</beans>

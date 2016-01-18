@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+    "http://struts.apache.org/dtds/struts-2.0.dtd">
+
+<struts>
+	
+    <constant name="struts.enable.DynamicMethodInvocation" value="true" />
+    <constant name="struts.devMode" value="true" />
+	<constant name="struts.i18n.encoding" value="UTF-8"/>
+	<constant name="struts.objectFactory" value="spring"/>
+	<constant name="struts.configuration.xml.reload" value="true"></constant>
+    
+    <!-- <include file="struts-file.xml"/> -->
+    <include file ="struts-default.xml" />       
+    
+     
+     <package name="admin" namespace="/admin" extends="struts-default">
+     
+   		<action name="*" class="admin" method="{1}">
+    		<result name="login">/login.jsp</result>
+    		<result name="users">/admin/users.jsp</result>
+    		<result name="add">/admin/add.jsp</result>
+    		<result name="input">/message.jsp</result>
+    		<result name="message">/message.jsp</result>
+    
+    		<result name="list" type="redirectAction">
+    			<param name="actionName">listUsers</param>
+    			<param name="status.id">${status.id}</param>
+    		</result>
+    		<!--  <interceptor-ref name="adminStack"/>-->
+    	</action>
+    	<!--  
+    	<action name="add" class="admin" method="add">
+    		<result name="input">/admin/add.jsp</result>
+    	</action>
+    	-->
+    
+    	<action name="login" class="admin" method="login">
+    		<result name="success" >manage.jsp</result>
+    		<result name="input">/login.jsp</result>
+    	</action>
+     </package>
+    
+	
+	<package name="user" namespace="/user" extends="struts-default">
+	
+		<action name="user_*" class="user" method="{1}">
+			<result name="success">/index.jsp</result>
+			<result name="login">/login.jsp</result>
+			<result name="input">/login.jsp</result>
+		</action>
+	
+		<action name="changepwd" class="user" method="changepwd">
+			<result name="input">/changepwd.jsp</result>
+			<result name="message">/message.jsp</result>
+			<!--<interceptor-ref name="roleStack"/>-->
+		</action>
+	</package>
+    
+    
+    
+    <package name="transaction" namespace="/transaction" extends="struts-default">
+    	<!--<default-interceptor-ref name="roleStack"/>-->
+    
+   		<action name="list" class="transaction" method="list">
+    		<result name="success">/transactionlog.jsp</result>
+    	</action>
+    
+   		<action name="transfer" class="transaction" method="transfer">
+    		<result name="input">/transfer.jsp</result>
+    		<result name="message">/message.jsp</result>
+    	</action>
+    
+		<action name="deposit" class="transaction" method="deposit">
+		    <result name="input">/deposit.jsp</result>
+		    <result name="message">/message.jsp</result>
+    	</action>
+    
+    	<action name="withdrawal" class="transaction" method="withdrawal">
+		<result name="input">/withdrawal.jsp</result>
+		<result name="message">/message.jsp</result>
+    	</action>
+    </package>
+    
+    
+      <package name="info" namespace="/info" extends="struts-default">
+      	<!--  <default-interceptor-ref name="roleStack"/>-->
+    
+   		<action name="info_*" class="personinfo" method="{1}">
+    		<result name="login">/login.jsp</result>
+    		<result name="input">/modify.jsp</result>
+    		<result name="message">/message.jsp</result>
+    		<!--<interceptor-ref name="roleStack"/>-->
+    	</action>
+    </package>
+</struts>

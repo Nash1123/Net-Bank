@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-module
+  type="WEB"
+  name="netbank"
+  id="myeclipse.1308232601265"
+  context-root="/netbank"
+  j2ee-spec="5.0"
+  archive="netbank.war">
+  <attributes>
+    <attribute name="webrootdir" value="WebRoot" />
+  </attributes>
+</project-module>
+
